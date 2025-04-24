@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EDITORMAMA PRO</title>
+    <style>
+        :root {
+            --neon-red: #ff073a;
+            --neon-pink: #ff2a6d;
+            --neon-blue: #05d9ff;
+            --neon-purple: #bd00ff;
+            --neon-green: #00ff87;
+            --dark-bg: #0d0d0d;
+            --panel-bg: #1a1a1a;
+            --glow-red: 0 0 10px var(--neon-red), 0 0 20px var(--neon-pink);
+            --glow-blue: 0 0 10px var(--neon-blue), 0 0 20px rgba(5, 217, 255, 0.5);
+            --border-color: var(--neon-red);
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark-bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease-out;
+        }
+        
+        .loading-logo {
+            font-size: 3rem;
+            color: var(--neon-blue);
+            text-shadow: var(--glow-blue);
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        .progress-bar {
+            width: 200px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--neon-red);
+            transition: width 0.3s ease;
+        }
+        
+        /* Welcome Screen */
+        .welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1s ease;
+        }
+        
+        .welcome-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .welcome-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-purple);
+            box-shadow: 0 0 30px rgba(189, 0, 255, 0.3);
+            padding: 30px;
+            max-width: 500px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        
+        .welcome-title {
+            color: var(--neon-pink);
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-shadow: var(--glow-red);
+        }
+        
+        .welcome-text {
+            color: #ccc;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        
+        .tutorial-highlight {
+            position: absolute;
+            border: 2px dashed var(--neon-blue);
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 100;
+            box-shadow: var(--glow-blue);
+            transition: all 0.5s ease;
+        }
+        
+        .tutorial-message {
+            position: absolute;
+            background: rgba(26, 26, 26, 0.9);
+            border: 1px solid var(--neon-blue);
+            padding: 15px;
+            border-radius: 5px;
+            max-width: 250px;
+            color: white;
+            z-index: 101;
+            box-shadow: var(--glow-blue);
+        }
+        
+        .tutorial-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        /* Main App Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Rajdhani', 'Arial Narrow', sans-serif;
+            background-color: var(--dark-bg);
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 7, 58, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(5, 217, 255, 0.05) 0%, transparent 20%);
+        }
+        
+        .header {
+            text-align: center;
+            padding: 15px;
+            text-shadow: var(--glow-red);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(13, 13, 13, 0.9);
+            z-index: 10;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.8rem;
+            color: var(--border-color);
+            letter-spacing: 5px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 5px 0 0;
+            font-size: 1.1rem;
+            color: var(--neon-blue);
+            letter-spacing: 3px;
+        }
+        
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .tool-panel {
+            width: 120px;
+            background: var(--panel-bg);
+            border-right: 1px solid #333;
+            padding: 15px 10px;
+            overflow-y: auto;
+        }
+        
+        .tool-btn {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #252525;
+            border: 1px solid #333;
+            color: #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Rajdhani';
+            font-weight: 600;
+            text-align: left;
+        }
+        
+        .tool-btn:hover, .tool-btn.active {
+            background: #333;
+            border-color: var(--border-color);
+            color: white;
+            box-shadow: 0 0 10px rgba(255, 7, 58, 0.3);
+        }
+        
+        .tool-btn.active {
+            background: linear-gradient(to right, #2a0d0d, #1a1a1a);
+            color: var(--border-color);
+            border-color: var(--border-color);
+        }
+        
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: black;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(255, 7, 58, 0.2);
+        }
+        
+        #drawingCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .magnifier {
+            width: 250px;
+            background: var(--panel-bg);
+            border-left: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(5, 217, 255, 0.2);
+        }
+        
+        .magnifier-header {
+            padding: 10px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #333;
+            color: var(--neon-blue);
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        #magnifierCanvas {
+            flex: 1;
+            margin: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--glow-blue);
+            border-radius: 3px;
+        }
+        
+        .controls {
+            display: flex;
+            padding: 15px;
+            background: var(--panel-bg);
+            border-top: 1px solid #333;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+        }
+        
+        label {
+            margin-bottom: 8px;
+            color: var(--neon-blue);
+            font-weight: 600;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+        
+        input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            background: black;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--border-color);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--border-color);
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(to right, #1a1a1a, #0d1a2a);
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Rajdhani';
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: linear-gradient(to right, #0d1a2a, #1a1a1a);
+            box-shadow: 0 0 15px rgba(5, 217, 255, 0.3);
+        }
+        
+        .zoom-level {
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--neon-blue);
+            border-radius: 3px;
+            font-size: 0.8rem;
+            border: 1px solid var(--neon-blue);
+            text-align: center;
+            margin: 0 20px 20px;
+        }
+        
+        /* Border color selector */
+        .border-color-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .border-color-option {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .border-color-option:hover {
+            transform: scale(1.2);
+        }
+        
+        .border-color-option.selected {
+            border: 2px solid white;
+            box-shadow: 0 0 10px white;
+        }
+        
+        /* Tool icons */
+        .tool-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% { opacity: 0.6; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.6; transform: scale(0.95); }
+        }
+        
+        @keyframes neon-flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+                text-shadow: 0 0 10px var(--neon-blue),
+                             0 0 20px var(--neon-blue),
+                             0 0 30px var(--neon-blue);
+            }
+            20%, 24%, 55% {        
+                text-shadow: none;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen">
+        <div class="loading-logo">EDITORMAMA PRO</div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+    
+    <!-- Welcome Screen -->
+    <div class="welcome-screen">
+        <div class="welcome-box">
+            <div class="welcome-title">WELCOME TO EDITORMAMA PRO</div>
+            <div class="welcome-text">
+                The ultimate cyberpunk creative suite. Let's take a quick tour of the main features.
+            </div>
+            <button id="startTutorial">START TUTORIAL</button>
+            <button id="skipTutorial">SKIP & START DRAWING</button>
+        </div>
+    </div>
+    
+    <!-- Tutorial Elements (hidden by default) -->
+    <div class="tutorial-highlight" style="display: none;"></div>
+    <div class="tutorial-message" style="display: none;"></div>
+    
+    <!-- Main App -->
+    <div class="header">
+        <h1>EDITORMAMA PRO</h1>
+        <p>ULTIMATE CYBERPUNK CREATIVE SUITE</p>
+    </div>
+    
+    <div class="main-container">
+        <div class="tool-panel">
+            <button class="tool-btn active" id="brushTool">
+                <span class="tool-icon">🖌️</span> Brush
+            </button>
+            <button class="tool-btn" id="pencilTool">
+                <span class="tool-icon">✏️</span> Pencil
+            </button>
+            <button class="tool-btn" id="markerTool">
+                <span class="tool-icon">🖍️</span> Marker
+            </button>
+            <button class="tool-btn" id="airbrushTool">
+                <span class="tool-icon">💨</span> Airbrush
+            </button>
+            <button class="tool-btn" id="eraserTool">
+                <span class="tool-icon">🧽</span> Eraser
+            </button>
+            <button class="tool-btn" id="shapeTool">
+                <span class="tool-icon">⬛</span> Shapes
+            </button>
+            <button class="tool-btn" id="textTool">
+                <span class="tool-icon">🔤</span> Text
+            </button>
+            <button class="tool-btn" id="fillTool">
+                <span class="tool-icon">🎨</span> Fill
+            </button>
+            
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+                <label style="color: var(--neon-blue);">BORDER COLOR</label>
+                <div class="border-color-selector">
+                    <div class="border-color-option selected" style="background: #ff073a;" data-color="#ff073a"></div>
+                    <div class="border-color-option" style="background: #05d9ff;" data-color="#05d9ff"></div>
+                    <div class="border-color-option" style="background: #bd00ff;" data-color="#bd00ff"></div>
+                    <div class="border-color-option" style="background: #00ff87;" data-color="#00ff87"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="drawingCanvas"></canvas>
+        </div>
+        
+        <div class="magnifier">
+            <div class="magnifier-header">PIXEL INSPECTOR</div>
+            <canvas id="magnifierCanvas"></canvas>
+            <div class="zoom-level">ZOOM: 2x</div>
+            
+            <div style="padding: 0 20px 20px;">
+                <div class="control-group">
+                    <label>BRUSH PRESETS</label>
+                    <select id="brushPresets" style="width:100%;padding:8px;background:#252525;border:1px solid #333;color:#ccc;border-radius:3px;">
+                        <option>Basic Round</option>
+                        <option>Chalk</option>
+                        <option>Ink</option>
+                        <option>Watercolor</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label for="colorPicker">PRIMARY COLOR</label>
+            <input type="color" id="colorPicker" value="#ff073a">
+        </div>
+        
+        <div class="control-group">
+            <label for="bgColorPicker">BG COLOR</label>
+            <input type="color" id="bgColorPicker" value="#0d0d0d">
+        </div>
+        
+        <div class="control-group">
+            <label for="brushSize">SIZE: <span id="brushSizeValue">5</span>px</label>
+            <input type="range" id="brushSize" min="1" max="100" value="5">
+        </div>
+        
+        <div class="control-group">
+            <label for="opacity">OPACITY: <span id="opacityValue">100</span>%</label>
+            <input type="range" id="opacity" min="1" max="100" value="100">
+        </div>
+        
+        <div class="control-group">
+            <label for="zoomLevel">ZOOM: <span id="zoomValue">2</span>x</label>
+            <input type="range" id="zoomLevel" min="1" max="10" value="2" step="0.5">
+        </div>
+        
+        <div class="control-group">
+            <label>ERASER MODE</label>
+            <select id="eraserMode">
+                <option value="bg">Background Color</option>
+                <option value="transparent">Transparent</option>
+            </select>
+        </div>
+        
+        <button id="clearBtn">CLEAR LAYER</button>
+        <button id="saveBtn">SAVE IMAGE</button>
+        <button id="layersBtn">LAYERS (3)</button>
+    </div>
+
+    <script>
+        // Canvas setup
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const ctx = drawingCanvas.getContext('2d', { willReadFrequently: true });
+        const magnifierCanvas = document.getElementById('magnifierCanvas');
+        const magnifierCtx = magnifierCanvas.getContext('2d');
+        
+        // UI Elements
+        const loadingScreen = document.querySelector('.loading-screen');
+        const progressFill = document.querySelector('.progress-fill');
+        const welcomeScreen = document.querySelector('.welcome-screen');
+        const startTutorialBtn = document.getElementById('startTutorial');
+        const skipTutorialBtn = document.getElementById('skipTutorial');
+        const tutorialHighlight = document.querySelector('.tutorial-highlight');
+        const tutorialMessage = document.querySelector('.tutorial-message');
+        
+        // Tool buttons
+        const tools = {
+            brush: document.getElementById('brushTool'),
+            pencil: document.getElementById('pencilTool'),
+            marker: document.getElementById('markerTool'),
+            airbrush: document.getElementById('airbrushTool'),
+            eraser: document.getElementById('eraserTool'),
+            shape: document.getElementById('shapeTool'),
+            text: document.getElementById('textTool'),
+            fill: document.getElementById('fillTool')
+        };
+        
+        // Controls
+        const colorPicker = document.getElementById('colorPicker');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+        const brushSize = document.getElementById('brushSize');
+        const brushSizeValue = document.getElementById('brushSizeValue');
+        const opacity = document.getElementById('opacity');
+        const opacityValue = document.getElementById('opacityValue');
+        const zoomLevel = document.getElementById('zoomLevel');
+        const zoomValue = document.getElementById('zoomValue');
+        const eraserMode = document.getElementById('eraserMode');
+        const clearBtn = document.getElementById('clearBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const layersBtn = document.getElementById('layersBtn');
+        const brushPresets = document.getElementById('brushPresets');
+        
+        // Border color options
+        const borderColorOptions = document.querySelectorAll('.border-color-option');
+        
+        // Drawing state
+        let currentTool = 'brush';
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let layers = [
+            { canvas: document.createElement('canvas'), visible: true, opacity: 1 },
+            { canvas: document.createElement('canvas'), visible: true, opacity: 1 },
+            { canvas: document.createElement('canvas'), visible: true, opacity: 1 }
+        ];
+        let currentLayer = 0;
+        let tutorialStep = 0;
+        
+        // Simulate loading
+        function simulateLoading() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                            welcomeScreen.classList.add('active');
+                        }, 1000);
+                    }, 300);
+                }
+                progressFill.style.width = `${progress}%`;
+            }, 100);
+        }
+        
+        // Tutorial steps
+        const tutorialSteps = [
+            {
+                element: () => document.getElementById('brushTool'),
+                message: "This is the Brush tool. Use it for smooth strokes with adjustable size and opacity.",
+                position: 'right'
+            },
+            {
+                element: () => document.getElementById('colorPicker'),
+                message: "Select your primary drawing color here. Try picking a bright neon color!",
+                position: 'bottom'
+            },
+            {
+                element: () => document.getElementById('eraserTool'),
+                message: "The Eraser can either make pixels transparent or draw with the background color (change in settings).",
+                position: 'right'
+            },
+            {
+                element: () => document.querySelector('.canvas-container'),
+                message: "This is your canvas. Click and drag to draw! Try making something cool!",
+                position: 'center'
+            },
+            {
+                element: () => document.getElementById('magnifierCanvas'),
+                message: "The Pixel Inspector shows a zoomed-in view of where your cursor is pointing.",
+                position: 'left'
+            }
+        ];
+        
+        function showTutorialStep(step) {
+            if (step >= tutorialSteps.length) {
+                endTutorial();
+                return;
+            }
+            
+            tutorialStep = step;
+            const { element, message, position } = tutorialSteps[step];
+            const targetElement = element();
+            
+            // Position highlight
+            const rect = targetElement.getBoundingClientRect();
+            tutorialHighlight.style.display = 'block';
+            tutorialHighlight.style.width = `${rect.width}px`;
+            tutorialHighlight.style.height = `${rect.height}px`;
+            tutorialHighlight.style.left = `${rect.left}px`;
+            tutorialHighlight.style.top = `${rect.top}px`;
+            
+            // Position message
+            tutorialMessage.style.display = 'block';
+            tutorialMessage.textContent = message;
+            
+            switch(position) {
+                case 'right':
+                    tutorialMessage.style.left = `${rect.right + 20}px`;
+                    tutorialMessage.style.top = `${rect.top}px`;
+                    break;
+                case 'bottom':
+                    tutorialMessage.style.left = `${rect.left}px`;
+                    tutorialMessage.style.top = `${rect.bottom + 20}px`;
+                    break;
+                case 'left':
+                    tutorialMessage.style.left = `${rect.left - 270}px`;
+                    tutorialMessage.style.top = `${rect.top}px`;
+                    break;
+                case 'center':
+                    tutorialMessage.style.left = '50%';
+                    tutorialMessage.style.top = '50%';
+                    tutorialMessage.style.transform = 'translate(-50%, -50%)';
+                    break;
+            }
+            
+            // Create next button
+            const isLastStep = step === tutorialSteps.length - 1;
+            tutorialMessage.innerHTML += `
+                <div class="tutorial-nav">
+                    ${step > 0 ? '<button id="prevTutorialStep">BACK</button>' : '<div></div>'}
+                    <button id="nextTutorialStep">${isLastStep ? 'FINISH' : 'NEXT'}</button>
+                </div>
+            `;
+            
+            document.getElementById('nextTutorialStep').addEventListener('click', () => showTutorialStep(step + 1));
+            if (step > 0) {
+                document.getElementById('prevTutorialStep').addEventListener('click', () => showTutorialStep(step - 1));
+            }
+        }
+        
+        function startTutorial() {
+            welcomeScreen.classList.remove('active');
+            showTutorialStep(0);
+        }
+        
+        function endTutorial() {
+            tutorialHighlight.style.display = 'none';
+            tutorialMessage.style.display = 'none';
+        }
+        
+        // Initialize
+        function init() {
+            resizeCanvases();
+            setupEventListeners();
+            setActiveTool('brush');
+            
+            // Initialize layers
+            layers.forEach(layer => {
+                layer.canvas.width = drawingCanvas.width;
+                layer.canvas.height = drawingCanvas.height;
+                const layerCtx = layer.canvas.getContext('2d');
+                layerCtx.fillStyle = 'rgba(0,0,0,0)';
+                layerCtx.fillRect(0, 0, layer.canvas.width, layer.canvas.height);
+            });
+            
+            // Draw initial magnifier
+            updateMagnifier({offsetX: magnifierCanvas.width/2, offsetY: magnifierCanvas.height/2});
+            
+            // Start loading simulation
+            simulateLoading();
+        }
+        
+        function resizeCanvases() {
+            const container = drawingCanvas.parentElement;
+            drawingCanvas.width = container.offsetWidth;
+            drawingCanvas.height = container.offsetHeight;
+            
+            magnifierCanvas.width = 200;
+            magnifierCanvas.height = 200;
+            
+            // Update layer canvases
+            layers.forEach(layer => {
+                layer.canvas.width = drawingCanvas.width;
+                layer.canvas.height = drawingCanvas.height;
+            });
+        }
+        
+        function setupEventListeners() {
+            // Tool selection
+            Object.keys(tools).forEach(tool => {
+                tools[tool].addEventListener('click', () => setActiveTool(tool));
+            });
+            
+            // Border color selection
+            borderColorOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    borderColorOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    document.documentElement.style.setProperty('--border-color', option.dataset.color);
+                    document.querySelector('.header h1').style.color = option.dataset.color;
+                });
+            });
+            
+            // Canvas events
+            drawingCanvas.addEventListener('mousedown', startDrawing);
+            drawingCanvas.addEventListener('mousemove', draw);
+            drawingCanvas.addEventListener('mouseup', stopDrawing);
+            drawingCanvas.addEventListener('mouseout', stopDrawing);
+            
+            // Touch support
+            drawingCanvas.addEventListener('touchstart', handleTouch);
+            drawingCanvas.addEventListener('touchmove', handleTouch);
+            drawingCanvas.addEventListener('touchend', stopDrawing);
+            
+            // Control events
+            brushSize.addEventListener('input', updateBrushSize);
+            opacity.addEventListener('input', updateOpacity);
+            zoomLevel.addEventListener('input', updateZoom);
+            colorPicker.addEventListener('input', updateColor);
+            bgColorPicker.addEventListener('input', updateColor);
+            clearBtn.addEventListener('click', clearCanvas);
+            saveBtn.addEventListener('click', saveCanvas);
+            layersBtn.addEventListener('click', toggleLayers);
+            
+            // Tutorial events
+            startTutorialBtn.addEventListener('click', startTutorial);
+            skipTutorialBtn.addEventListener('click', () => {
+                welcomeScreen.classList.remove('active');
+            });
+            
+            // Window events
+            window.addEventListener('resize', resizeCanvases);
+        }
+        
+        function setActiveTool(tool) {
+            // Update UI
+            Object.keys(tools).forEach(t => {
+                tools[t].classList.remove('active');
+            });
+            tools[tool].classList.add('active');
+            
+            // Update tool
+            currentTool = tool;
+            
+            // Change cursor based on tool
+            let cursor = 'crosshair';
+            switch(tool) {
+                case 'brush': cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><circle cx=\'12\' cy=\'12\' r=\'10\' fill=\'none\' stroke=\'' + getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() + '\' stroke-width=\'2\'/></svg>") 12 12, crosshair'; break;
+                case 'eraser': cursor = 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\'><rect x=\'6\' y=\'6\' width=\'12\' height=\'12\' fill=\'none\' stroke=\'%23fff\' stroke-width=\'2\'/></svg>") 12 12, cell'; break;
+                case 'text': cursor = 'text'; break;
+            }
+            drawingCanvas.style.cursor = cursor;
+        }
+        
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = getPosition(e);
+            
+            const layerCtx = layers[currentLayer].canvas.getContext('2d');
+            
+            if (currentTool === 'fill') {
+                floodFill(lastX, lastY);
+                isDrawing = false;
+            } else {
+                layerCtx.beginPath();
+                layerCtx.moveTo(lastX, lastY);
+                
+                // Draw initial point for better UX
+                if (currentTool !== 'airbrush') {
+                    layerCtx.arc(lastX, lastY, parseInt(brushSize.value)/2, 0, Math.PI*2);
+                    layerCtx.fillStyle = getCurrentColor();
+                    layerCtx.globalAlpha = parseInt(opacity.value)/100;
+                    layerCtx.fill();
+                }
+            }
+            
+            renderLayers();
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const [x, y] = getPosition(e);
+            const layerCtx = layers[currentLayer].canvas.getContext('2d');
+            layerCtx.globalAlpha = parseInt(opacity.value)/100;
+            
+            switch(currentTool) {
+                case 'brush':
+                case 'pencil':
+                case 'marker':
+                case 'eraser':
+                    layerCtx.lineTo(x, y);
+                    layerCtx.strokeStyle = getCurrentColor();
+                    layerCtx.lineWidth = brushSize.value;
+                    layerCtx.lineCap = 'round';
+                    layerCtx.lineJoin = 'round';
+                    layerCtx.stroke();
+                    layerCtx.beginPath();
+                    layerCtx.moveTo(x, y);
+                    break;
+                    
+                case 'airbrush':
+                    // Airbrush effect with scattered dots
+                    const density = 5;
+                    const radius = parseInt(brushSize.value)/2;
+                    for (let i = 0; i < density; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * radius;
+                        const px = x + Math.cos(angle) * dist;
+                        const py = y + Math.sin(angle) * dist;
+                        
+                        layerCtx.beginPath();
+                        layerCtx.arc(px, py, 1 + Math.random()*2, 0, Math.PI*2);
+                        layerCtx.fillStyle = getCurrentColor();
+                        layerCtx.globalAlpha = (Math.random() * 0.5 + 0.5) * (parseInt(opacity.value)/100);
+                        layerCtx.fill();
+                    }
+                    break;
+            }
+            
+            lastX = x;
+            lastY = y;
+            
+            renderLayers();
+            updateMagnifier(e);
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            if (e.type === 'touchstart') {
+                startDrawing(e.touches[0]);
+            } else if (e.type === 'touchmove') {
+                draw(e.touches[0]);
+            }
+        }
+        
+        function getPosition(e) {
+            const rect = drawingCanvas.getBoundingClientRect();
+            return [
+                e.clientX - rect.left,
+                e.clientY - rect.top
+            ];
+        }
+        
+        function getCurrentColor() {
+            if (currentTool === 'eraser') {
+                const mode = eraserMode.value;
+                return mode === 'transparent' ? 'rgba(0,0,0,0)' : bgColorPicker.value;
+            }
+            return colorPicker.value;
+        }
+        
+        function floodFill(startX, startY) {
+            const layerCtx = layers[currentLayer].canvas.getContext('2d');
+            const imageData = layerCtx.getImageData(0, 0, drawingCanvas.width, drawingCanvas.height);
+            const targetColor = hexToRgb(currentTool === 'eraser' ? bgColorPicker.value : colorPicker.value);
+            const startPos = (Math.floor(startY) * imageData.width + Math.floor(startX)) * 4;
+            
+            const pixels = imageData.data;
+            const targetR = pixels[startPos];
+            const targetG = pixels[startPos + 1];
+            const targetB = pixels[startPos + 2];
+            const targetA = pixels[startPos + 3];
+            
+            const fillR = targetColor.r;
+            const fillG = targetColor.g;
+            const fillB = targetColor.b;
+            const fillColor = new Uint8Array([fillR, fillG, fillB, 255]);
+            
+            const stack = [[Math.floor(startX), Math.floor(startY)]];
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            while (stack.length) {
+                const [x, y] = stack.pop();
+                const pos = (y * width + x) * 4;
+                
+                if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                
+                if (
+                    pixels[pos] === targetR &&
+                    pixels[pos + 1] === targetG &&
+                    pixels[pos + 2] === targetB &&
+                    pixels[pos + 3] === targetA
+                ) {
+                    pixels.set(fillColor, pos);
+                    
+                    stack.push([x + 1, y]);
+                    stack.push([x - 1, y]);
+                    stack.push([x, y + 1]);
+                    stack.push([x, y - 1]);
+                }
+            }
+            
+            layerCtx.putImageData(imageData, 0, 0);
+            renderLayers();
+        }
+        
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return { r, g, b };
+        }
+        
+        function renderLayers() {
+            ctx.fillStyle = bgColorPicker.value;
+            ctx.fillRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            
+            layers.forEach((layer, index) => {
+                if (layer.visible) {
+                    ctx.globalAlpha = layer.opacity;
+                    ctx.drawImage(layer.canvas, 0, 0);
+                }
+            });
+            
+            ctx.globalAlpha = 1.0;
+        }
+        
+        function updateMagnifier(e) {
+            const [x, y] = e ? getPosition(e) : [magnifierCanvas.width/2, magnifierCanvas.height/2];
+            const zoom = parseFloat(zoomLevel.value);
+            const size = magnifierCanvas.width;
+            const radius = size / 2;
+            
+            magnifierCtx.clearRect(0, 0, size, size);
+            magnifierCtx.save();
+            magnifierCtx.drawImage(
+                drawingCanvas,
+                x - radius/zoom, y - radius/zoom, 
+                radius*2/zoom, radius*2/zoom,
+                0, 0, 
+                size, size
+            );
+            
+            if (zoom >= 3) {
+                magnifierCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                magnifierCtx.lineWidth = 0.5;
+                
+                for (let i = 0; i < size; i += zoom) {
+                    magnifierCtx.beginPath();
+                    magnifierCtx.moveTo(i, 0);
+                    magnifierCtx.lineTo(i, size);
+                    magnifierCtx.stroke();
+                }
+                
+                for (let i = 0; i < size; i += zoom) {
+                    magnifierCtx.beginPath();
+                    magnifierCtx.moveTo(0, i);
+                    magnifierCtx.lineTo(size, i);
+                    magnifierCtx.stroke();
+                }
+            }
+            
+            magnifierCtx.strokeStyle = 'rgba(255, 7, 58, 0.8)';
+            magnifierCtx.lineWidth = 1;
+            magnifierCtx.beginPath();
+            magnifierCtx.moveTo(size/2, 0);
+            magnifierCtx.lineTo(size/2, size);
+            magnifierCtx.moveTo(0, size/2);
+            magnifierCtx.lineTo(size, size/2);
+            magnifierCtx.stroke();
+            
+            magnifierCtx.restore();
+        }
+        
+        function updateBrushSize() {
+            brushSizeValue.textContent = brushSize.value;
+        }
+        
+        function updateOpacity() {
+            opacityValue.textContent = opacity.value;
+        }
+        
+        function updateZoom() {
+            zoomValue.textContent = zoomLevel.value;
+            document.querySelector('.zoom-level').textContent = `ZOOM: ${zoomLevel.value}x`;
+        }
+        
+        function updateColor() {
+            // Update tool color if needed
+        }
+        
+        function clearCanvas() {
+            if (confirm('Clear current layer?')) {
+                const layerCtx = layers[currentLayer].canvas.getContext('2d');
+                layerCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+                renderLayers();
+            }
+        }
+        
+        function saveCanvas() {
+            const link = document.createElement('a');
+            link.download = `editormama-${new Date().toISOString().slice(0,10)}.png`;
+            link.href = drawingCanvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function toggleLayers() {
+            alert('Layers panel would open here');
+        }
+        
+        // Initialize the app
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
